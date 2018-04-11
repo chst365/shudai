@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE xml>
+<!-- monitorInterval 半小时检测一次文件变化 -->
+<configuration debug="off" monitorInterval="1800">
+	<Properties>
+		<Property name="logPath">${web:rootDir}/logs</Property>
+		<!-- <Property name="logInfo">info.log</Property> -->
+		<!-- <Property name="logController">controller.log</Property> -->
+		<!-- <Property name="logService">service.log</Property> -->
+		<!-- <Property name="logError">error.log</Property> -->
+	</Properties>
+  	<CustomLevels>  
+        <CustomLevel name="SERVICE" intLevel="301" />
+        <CustomLevel name="CONTROLLER" intLevel="399" />
+    </CustomLevels>
+	<appenders>
+		<!-- DEBUG 级别输出到控制台 -->
+		<Console name="consoleLog" target="SYSTEM_OUT">
+			<ThresholdFilter level="debug" onMatch="ACCEPT" onMismatch="DENY" />
+			<PatternLayout charset="UTF-8" pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p (%F:%L) - %msg%xEx%n" />
+		</Console>
+		<!-- INFO 级别日志保存 -->
+		<!-- <RollingFile name="infoLog" fileName="${logPath}/info/${logInfo}" filePattern="${logPath}/info/$${date:yyyy-MM-dd}/%d{HH-mm}-%i.${logInfo}.gz">
+			<ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY" />
+			<PatternLayout charset="UTF-8" pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p (%F:%L) - %msg%xEx%n" />
+			<SizeBasedTriggeringPolicy size="10MB" />
+		</RollingFile> -->
+		<!-- SERVICE 级别日志保存 -->
+		<!-- <RollingFile name="serviceLog" fileName="${logPath}/service/${logService}" filePattern="${logPath}/service/$${date:yyyy-MM-dd}/%d{HH-mm}-%i.${logService}.gz">
+			<ThresholdFilter level="SERVICE" onMatch="ACCEPT" onMismatch="DENY" />
+			<PatternLayout charset="UTF-8" pattern="|[CREATE]: %d{yyyy-MM-dd HH:mm:ss}; %msg%xEx; |%n" />
+			<SizeBasedTriggeringPolicy size="10MB" />
+		</RollingFile> -->
+		<!-- CONTROLLER 级别日志保存 -->
+		<!-- <RollingFile name="controllerLog" fileName="${logPath}/controller/${logController}" filePattern="${logPath}/controller/$${date:yyyy-MM-dd}/%d{HH-mm}-%i.${logController}.gz">
+			<ThresholdFilter level="CONTROLLER" onMatch="ACCEPT" onMismatch="DENY" />
+			<PatternLayout charset="UTF-8" pattern="|[CREATE]: %d{yyyy-MM-dd HH:mm:ss}; %msg%xEx; |%n" />
+			<SizeBasedTriggeringPolicy size="10MB" />
+		</RollingFile> -->
+		<!-- ERROR 级别日志保存 -->
+		<!-- <RollingFile name="errorLog" fileName="${logPath}/error/${logError}" filePattern="${logPath}/error/$${date:yyyy-MM-dd}/%d{HH-mm}-%i.${logError}.gz">
+			<ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY" />
+			<PatternLayout charset="UTF-8" pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p (%F:%L) - %msg%xEx%n" />
+			<SizeBasedTriggeringPolicy size="10MB" />
+		</RollingFile> -->
+	</appenders>
+	<!--定义logger并引入appender -->
+	<loggers>
+        <!--过滤掉一些无用的DEBUG信息-->
+        <!-- <logger name="org.springframework" level="INFO"></logger>
+        <logger name="org.mybatis" level="INFO"></logger>
+        <logger name="org.apache.shiro.web.servlet" level="INFO"></logger> -->
+		<root level="debug">
+			<appender-ref ref="consoleLog" />
+			<!-- <appender-ref ref="infoLog" /> -->
+			<!-- <appender-ref ref="serviceLog" /> -->
+			<!-- <appender-ref ref="controllerLog" /> -->
+			<!-- <appender-ref ref="errorLog" /> -->
+		</root>
+	</loggers>
+</configuration>

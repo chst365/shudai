@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.shudailaoshi.dao.sys.OperatingDao">
+
+ 	<resultMap id="operatingMap" type="Operating">
+	    <id column="id" property="id" jdbcType="BIGINT" />
+		<result column="user_name" property="userName" jdbcType="VARCHAR" />
+		<result column="user_id" property="userId" jdbcType="BIGINT" />
+		<result column="log_text" property="logText" jdbcType="VARCHAR" />
+		<result column="ip_address" property="ipAddress" jdbcType="VARCHAR" />
+		<result column="create_time" property="createTime" jdbcType="BIGINT" />
+		<result column="clazz_name" property="clazzName" jdbcType="VARCHAR" />
+		<result column="method_name" property="methodName" jdbcType="VARCHAR" />
+	</resultMap>
+
+	<sql id="listWhere">
+		<where>
+			<if test="operatingQuery!=null">
+				<if test="@com.shudailaoshi.utils.ValidUtil@isNotBlank(operatingQuery.userName)">
+					 and user_name like concat('%',#{operatingQuery.userName},'%') 
+				</if>
+				<if test="operatingQuery.userId!=null">
+					 and user_id = #{operatingQuery.userId} 
+				</if>
+				<if test="@com.shudailaoshi.utils.ValidUtil@isNotBlank(operatingQuery.logText)">
+					 and log_text like concat('%',#{operatingQuery.logText},'%') 
+				</if>
+				<if test="@com.shudailaoshi.utils.ValidUtil@isNotBlank(operatingQuery.ipAddress)">
+					 and ip_address like concat('%',#{operatingQuery.ipAddress},'%') 
+				</if>
+				<if test="@com.shudailaoshi.utils.ValidUtil@isNotBlank(operatingQuery.clazzName)">
+					 and clazz_name like concat('%',#{operatingQuery.clazzName},'%') 
+				</if>
+				<if test="@com.shudailaoshi.utils.ValidUtil@isNotBlank(operatingQuery.methodName)">
+					 and method_name like concat('%',#{operatingQuery.methodName},'%') 
+				</if>
+				
+				<if test="@com.shudailaoshi.utils.ValidUtil@isNotBlank(operatingQuery.startDate)">
+					and FROM_UNIXTIME(create_time/1000,'%Y-%m-%d') <![CDATA[>=]]> #{operatingQuery.startDate}
+				</if>
+				<if test="@com.shudailaoshi.utils.ValidUtil@isNotBlank(operatingQuery.endDate)">
+					and FROM_UNIXTIME(create_time/1000,'%Y-%m-%d') <![CDATA[<=]]> #{operatingQuery.endDate}
+				</if>
+			</if>
+		</where>
+	</sql>
+
+	<select id="listOperating" resultMap="operatingMap">
+		select *
+		from sys_operating
+		<include refid="listWhere" />
+		<if test="operatingQuery.sort!=null">
+			order by ${@com.shudailaoshi.utils.StringUtil@camelhumpToUnderline(operatingQuery.sort.property)} ${operatingQuery.sort.direction}
+		</if>
+		<if test="start!=null and limit!=null">
+			limit #{start},#{limit}
+		</if>
+	</select>
+
+	<select id="countOperating" resultType="java.lang.Long">
+		select count(*) from sys_operating
+		<include refid="listWhere" />
+	</select>
+
+</mapper>

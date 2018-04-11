@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.shudailaoshi.dao.sys.RoleResourceDao">
+
+	<resultMap id="roleResourceMap" type="RoleResource">
+		<result column="role_id" property="roleId" jdbcType="BIGINT" />
+		<result column="resource_id" property="resourceId" jdbcType="BIGINT" />
+	</resultMap>
+
+	<sql id="roleResourceColumn">
+		role_id, resource_id
+	</sql>
+
+	<insert id="saveRoleResourceList">
+		insert into sys_role_resource (role_id,resource_id) values
+		<foreach collection="resourceIds" item="resourceId" separator=",">
+			(${roleId},${resourceId})
+		</foreach>
+	</insert>
+
+</mapper>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.shudailaoshi.dao.sys.UserDao">
+
+	<resultMap id="userMap" type="User">
+		<id column="id" property="id" jdbcType="BIGINT" />
+		<result column="user_name" property="userName" jdbcType="VARCHAR" />
+		<result column="user_pwd" property="userPwd" jdbcType="VARCHAR" />
+		<result column="salt" property="salt" jdbcType="VARCHAR" />
+		<result column="email" property="email" jdbcType="VARCHAR" />
+		<result column="mobile" property="mobile" jdbcType="VARCHAR" />
+		<result column="create_time" property="createTime" jdbcType="BIGINT" />
+		<result column="modify_time" property="modifyTime" jdbcType="BIGINT" />
+		<result column="status" property="status" jdbcType="INTEGER" />
+	</resultMap>
+	
+	<sql id="listWhere">
+		<where>
+			<if test="userQuery!=null">
+				<if
+					test="@com.shudailaoshi.utils.ValidUtil@isNotBlank(userQuery.userName)">
+					and user_name like concat('%',#{userQuery.userName},'%')
+				</if>
+				<if test="@com.shudailaoshi.utils.ValidUtil@isNotBlank(userQuery.email)">
+					and email like concat('%',#{userQuery.email},'%')
+				</if>
+				<if test="@com.shudailaoshi.utils.ValidUtil@isNotBlank(userQuery.mobile)">
+					and mobile like concat('%',#{userQuery.mobile},'%')
+				</if>
+				<if
+					test="@com.shudailaoshi.utils.ValidUtil@isNotBlank(userQuery.startDate)">
+					and FROM_UNIXTIME(create_time/1000,'%Y-%m-%d') <![CDATA[>=]]>
+					#{userQuery.startDate}
+				</if>
+				<if
+					test="@com.shudailaoshi.utils.ValidUtil@isNotBlank(userQuery.endDate)">
+					and FROM_UNIXTIME(create_time/1000,'%Y-%m-%d') <![CDATA[<=]]>
+					#{userQuery.endDate}
+				</if>
+			</if>
+		</where>
+	</sql>
+
+	<select id="listUser" resultMap="userMap">
+		select * from sys_user
+		<include refid="listWhere" />
+		<if test="userQuery.sort!=null">
+			order by ${@com.shudailaoshi.utils.StringUtil@camelhumpToUnderline(userQuery.sort.property)} ${userQuery.sort.direction}
+		</if>
+		<if test="start!=null and limit!=null">
+			limit #{start},#{limit}
+		</if>
+	</select>
+
+	<select id="countUser" resultType="java.lang.Long">
+		select count(*) from sys_user
+		<include refid="listWhere" />
+	</select>
+
+	<select id="listUserNameByRoleId" resultType="java.lang.String">
+		select u.user_name
+		from sys_user u left join sys_user_role ur on u.id = ur.user_id where
+		ur.role_id = #{roleId}
+	</select>
+
+	<select id="listUserNameByResourceId" resultType="java.lang.String">
+		select
+		u.user_name from sys_user u left join sys_user_role ur on u.id =
+		ur.user_id left join sys_role_resource rr on ur.role_id = rr.role_id
+		where rr.resource_id = #{resourceId}
+	</select>
+
+	<select id="getUserMobileByCustomerId" resultType="java.lang.String">
+		select
+		u.mobile from crm_customer c inner join sys_user u on c.user_id = u.id
+		where c.id = #{customerId}
+	</select>
+</mapper>

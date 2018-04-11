@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.shudailaoshi.dao.sys.RoleDao">
+	<resultMap id="roleMap" type="Role">
+		<id column="id" property="id" jdbcType="BIGINT" />
+		<result column="role_name" property="roleName" jdbcType="VARCHAR" />
+		<result column="description" property="description" jdbcType="VARCHAR" />
+		<result column="create_time" property="createTime" jdbcType="BIGINT" />
+		<result column="status" property="status" jdbcType="INTEGER" />
+	</resultMap>
+
+	<sql id="roleColumn">
+		id, role_name, description, status
+	</sql>
+	<sql id="StatusEnum_NORMAL">
+		${@com.shudailaoshi.entity.enums.StatusEnum@NORMAL.getValue()}
+	</sql>
+
+	<select id="listByUserId" resultMap="roleMap">
+		select r.id,r.role_name from sys_role r left join sys_user_role ur on
+		r.id = ur.role_id where ur.user_id = #{userId} and r.status =
+		<include refid="StatusEnum_NORMAL" />
+	</select>
+
+	<select id="listIdByUserId" resultType="java.lang.Long">
+		select r.id from sys_role r left join sys_user_role ur on r.id =
+		ur.role_id where ur.user_id = #{userId} and r.status =
+		<include refid="StatusEnum_NORMAL" />
+	</select>
+
+</mapper>

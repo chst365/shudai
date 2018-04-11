@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.shudailaoshi.dao.sys.ResourceDao">
+
+	<resultMap id="resourceMap" type="Resource">
+		<id column="id" property="id" jdbcType="BIGINT" />
+		<result column="resource_name" property="resourceName" jdbcType="VARCHAR" />
+		<result column="url" property="url" jdbcType="VARCHAR" />
+		<result column="icon_cls" property="iconCls" jdbcType="VARCHAR" />
+		<result column="sort" property="sort" jdbcType="DOUBLE" />
+		<result column="is_menu" property="isMenu" jdbcType="BIT" />
+		<result column="parent_id" property="parentId" jdbcType="BIGINT" />
+		<result column="create_time" property="createTime" jdbcType="BIGINT" />
+		<result column="status" property="status" jdbcType="INTEGER" />
+	</resultMap>
+
+	<sql id="resourceColumn">
+		id, resource_name, url, icon_cls, sort, is_menu, parent_id, status
+	</sql>
+	<sql id="StatusEnum_NORMAL">
+		${@com.shudailaoshi.entity.enums.StatusEnum@NORMAL.getValue()}
+	</sql>
+
+	<select id="listByRoleId" resultMap="resourceMap">
+		select r.id,r.url from sys_resource r left join sys_role_resource rr
+		on r.id = rr.resource_id where rr.role_id = #{roleId} and r.status =
+		<include refid="StatusEnum_NORMAL" />
+	</select>
+
+	<select id="listIdByRoleId" resultType="java.lang.Long">
+		select r.id from sys_resource r left join sys_role_resource rr on r.id
+		= rr.resource_id where rr.role_id = #{roleId} and r.status =
+		<include refid="StatusEnum_NORMAL" />
+	</select>
+
+	<select id="listPermit" resultType="PermitVo">
+		select url, resource_name as resourceName, icon_cls as iconCls from sys_resource
+		<where>
+			status =
+			<include refid="StatusEnum_NORMAL" />
+			<if test="permissions!=null">
+				and url in
+				<foreach collection="permissions" item="item" open="("
+					separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+		</where>
+	</select>
+
+</mapper>

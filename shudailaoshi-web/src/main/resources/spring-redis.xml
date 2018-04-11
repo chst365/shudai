@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:redis="http://www.springframework.org/schema/redis"
+	xsi:schemaLocation="
+	http://www.springframework.org/schema/beans     
+	http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-4.0.xsd
+	http://www.springframework.org/schema/redis http://www.springframework.org/schema/redis/spring-redis-1.0.xsd
+	">
+
+	<context:property-placeholder location="classpath:config.properties"
+		ignore-unresolvable="true" />
+
+	<!-- jedis pool配置 -->
+	<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+		<property name="maxTotal" value="${redis.maxActive}" />
+		<property name="maxIdle" value="${redis.maxIdle}" />
+		<property name="maxWaitMillis" value="${redis.maxWait}" />
+		<property name="testOnBorrow" value="${redis.testOnBorrow}" />
+	</bean>
+    
+    <!-- <bean id = "jedisPool" class="redis.clients.jedis.JedisPool">  
+        <constructor-arg index="0" ref="jedisPoolConfig"/>  
+        <constructor-arg index="1" value="${redis.host}"/>  
+        <constructor-arg index="2" value="${redis.port}" type="int"/>  
+        <constructor-arg index="3" value="${redis.timeout}" type="int"/>  
+        <constructor-arg index="4" value="${redis.pass}"/>
+        <constructor-arg index="5" value="${redis.default.db}" type="int"/>
+    </bean>  --> 
+	
+	<bean id="redisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+		<property name="usePool" value="true"></property>
+		<property name="hostName" value="${redis.host}" />
+		<property name="port" value="${redis.port}" />
+		<property name="password" value="${redis.pass}" />
+		<property name="timeout" value="${redis.timeout}" />
+		<property name="database" value="${redis.default.db}"></property>
+		<constructor-arg index="0" ref="jedisPoolConfig" />
+	</bean>
+	
+	<!-- serializer -->
+	<bean id="stringRedisSerializer" class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+	<bean id="jdkSerializationRedisSerializer" class="org.springframework.data.redis.serializer.JdkSerializationRedisSerializer" />
+	
+	<!-- Redis Template -->
+	<bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="redisConnectionFactory" />
+		<property name="keySerializer" ref="stringRedisSerializer" />
+		<property name="valueSerializer" ref="jdkSerializationRedisSerializer" />
+		<property name="hashKeySerializer" ref="stringRedisSerializer" />
+		<property name="hashValueSerializer" ref="stringRedisSerializer" />
+	</bean>
+	
+    <!-- 对string操作的封装 -->
+    <!-- <bean id="stringRedisTemplate" class="org.springframework.data.redis.core.StringRedisTemplate">
+        <property name="connectionFactory" ref="redisConnectionFactory" />
+    </bean> -->
+
+    <!-- 设置redis消息订阅（方式1） -->
+    <!--<bean id="listener" class="rhxtune.smarthome.api.services.DefaultMessageDelegate" />
+    <redis:listener-container connection-factory="jedisConnFactory">
+        <redis:listener ref="listener" method="handleMessage" topic="__keyevent@1__:expired" />
+    </redis:listener-container>-->
+    <!-- 设置redis消息订阅（方式2） http://redisdoc.com/topic/notification.html https://redis.io/topics/notifications#configuration -->
+	<!-- <bean id="redisMsgConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+		<property name="usePool" value="true"></property>
+		<property name="hostName" value="${redis.host}" />
+		<property name="port" value="${redis.port}" />
+		<property name="password" value="${redis.pass}" />
+		<property name="timeout" value="${redis.timeout}" />
+		<property name="database" value="${redis.saveMsg.db}"></property>
+		<constructor-arg index="0" ref="jedisPoolConfig" />
+	</bean>
+	<bean id="redisPubTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="redisMsgConnectionFactory" />
+		<property name="keySerializer" ref="stringRedisSerializer" />
+		<property name="valueSerializer" ref="jdkSerializationRedisSerializer" />
+		<property name="hashKeySerializer" ref="stringRedisSerializer" />
+		<property name="hashValueSerializer" ref="stringRedisSerializer" />
+	</bean> -->
+	<!-- redisManager -->
+	<!-- <bean id="redisPubRepository" class="com.shudailaoshi.dao.redis.RedisPubRepository">
+		<property name="redisPubTemplate" ref="redisPubTemplate" />
+	</bean>
+    <bean id="messageListener" class="org.springframework.data.redis.listener.adapter.MessageListenerAdapter">
+        <constructor-arg>
+            <bean class="com.shudailaoshi.manager.redis.impl.RedisSubManagerImpl" />
+        </constructor-arg>
+    </bean>
+    <bean id="redisContainer" class="org.springframework.data.redis.listener.RedisMessageListenerContainer">
+        <property name="connectionFactory" ref="redisMsgConnectionFactory" />
+        <property name="messageListeners">
+            <map>
+                <entry key-ref="messageListener">
+                    <list>
+                        <bean class="org.springframework.data.redis.listener.ChannelTopic">
+                            <constructor-arg value="__keyevent@${redis.saveMsg.db}__:expired" />
+                        </bean>
+					<bean class="org.springframework.data.redis.listener.PatternTopic">
+                            <constructor-arg value="*" />
+                        </bean>
+                        <bean class="org.springframework.data.redis.listener.PatternTopic">
+                            <constructor-arg value="‘__key*__:*" />
+                        </bean>
+                    </list>
+                </entry>
+            </map>
+        </property>
+    </bean> -->
+	
+</beans>

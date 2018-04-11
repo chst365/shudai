@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.shudailaoshi.dao.sys.UserRoleDao">
+
+	<resultMap id="userRoleMap" type="UserRole">
+		<result column="user_id" property="userId" jdbcType="BIGINT" />
+		<result column="role_id" property="roleId" jdbcType="BIGINT" />
+	</resultMap>
+
+	<sql id="userRoleColumn">
+		user_id, role_id
+	</sql>
+
+	<insert id="saveUserRoleList">
+		insert into sys_user_role (user_id,role_id) values
+		<foreach collection="roleIds" item="roleId" separator=",">
+			(${userId},${roleId})
+		</foreach>
+	</insert>
+
+</mapper>

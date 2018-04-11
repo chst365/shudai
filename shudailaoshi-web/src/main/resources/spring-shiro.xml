@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+       	http://www.springframework.org/schema/beans 
+       	http://www.springframework.org/schema/beans/spring-beans.xsd
+       	http://www.springframework.org/schema/util 
+       	http://www.springframework.org/schema/util/spring-util.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<context:property-placeholder location="classpath:config.properties"
+		ignore-unresolvable="true" />
+
+	<!-- 会话ID生成器 -->
+	<bean id="sessionIdGenerator"
+		class="org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator" />
+
+	<!-- SESSIONID Cookie -->
+	<bean id="sessionIdCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+		<constructor-arg value="SID" />
+		<property name="httpOnly" value="true" />
+		<property name="path" value="/" />
+	</bean>
+
+	<!-- REMEMBERME Cookie -->
+	<bean id="rememberMeCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+		<constructor-arg value="REMEMBERME" />
+		<property name="httpOnly" value="true" />
+		<property name="path" value="/" />
+		<property name="maxAge" value="${redis.defaultExpireTime}" />
+	</bean>
+
+	<!-- rememberMe 管理器 -->
+	<bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
+		<!-- rememberMe cookie加密的密钥 建议每个项目都不一样 默认AES算法 密钥长度（128 256 512 位） -->
+		<property name="cipherKey"
+			value="#{T(org.apache.shiro.codec.Base64).decode('4AvVhmFLUs0KTA3Kprsdag==')}" />
+		<property name="cookie" ref="rememberMeCookie" />
+	</bean>
+
+	<!-- session 管理器 -->
+	<bean id="sessionManager"
+		class="com.shudailaoshi.manager.cache.shiro.ShiroSessionManager">
+		<property name="sessionIdUrlRewritingEnabled" value="false" />
+		<property name="sessionDAO" ref="shiroRedisSessionDao" />
+		<property name="sessionIdCookieEnabled" value="true" />
+		<property name="sessionIdCookie" ref="sessionIdCookie" />
+	</bean>
+
+	<!-- Realm -->
+	<bean id="shiroDbRealm" class="com.shudailaoshi.manager.auth.ShiroDbRealm">
+		<property name="cachingEnabled" value="true" />
+		<!-- <property name="authenticationCachingEnabled" value="true" /> -->
+		<!-- <property name="authenticationCacheName" value="authenticationCache" /> -->
+		<property name="authorizationCachingEnabled" value="true" />
+		<property name="authorizationCacheName" value="${shiro.authorizationCache}" />
+	</bean>
+
+	<!-- 安全管理器 -->
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+		<property name="realm" ref="shiroDbRealm" />
+		<property name="sessionManager" ref="sessionManager" />
+		<property name="cacheManager" ref="shiroRedisCacheManager" />
+		<property name="rememberMeManager" ref="rememberMeManager" />
+	</bean>
+
+	<!-- 相当于调用SecurityUtils.setSecurityManager(securityManager) -->
+	<bean
+		class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+		<property name="staticMethod"
+			value="org.apache.shiro.SecurityUtils.setSecurityManager" />
+		<property name="arguments" ref="securityManager" />
+	</bean>
+
+	<!-- Shiro Filter -->
+	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+		<property name="securityManager" ref="securityManager" />
+		<property name="loginUrl" value="/login.html" />
+		<!-- 自定义角色授权 -->
+		<property name="filters">
+			<map>
+				<entry key="webAuth">
+					<!-- web过滤器 -->
+					<bean id="webAuthorizationFilter" class="com.shudailaoshi.manager.auth.WebAuthorizationFilter" />
+				</entry>
+				<entry key="mobileAuth">
+					<!-- mobile过滤器 -->
+					<bean id="mobileAuthorizationFilter" class="com.shudailaoshi.manager.auth.MobileAuthorizationFilter" />
+				</entry>
+			</map>
+		</property>
+		<property name="filterChainDefinitions">
+			<value>
+				/ = anon
+				/**/**/*.htm = anon
+				/**/*.js = anon
+				/**/*.css = anon
+				/**/*.png = anon
+				/**/*.jpg = anon
+				/**/*.gif = anon
+				/**/*.ico = anon
+				/**/*.otf = anon
+				/**/*.ttf = anon
+				/**/*.svg = anon
+				/**/*.eot = anon
+				/**/*.woff = anon
+				/**/*.woff2 = anon
+				/**/*.mp3 = anon
+				/test/** = anon
+				/**/*/front/**/* = anon
+				<!-- 是否登录 -->
+				/isLogin = anon
+				<!-- 验证码 -->
+				/imageCode = anon
+				/regisCode = anon
+				/m/regisCode = anon
+				/m/imageCode = anon
+				<!-- 获取公钥 -->
+				/getPublicKey = anon
+				<!-- 获取提交token -->
+				/getSubmitToken = anon
+				<!-- 刷新客户端token -->
+				/m/refreshToken = anon
+				<!-- pc端登录 -->
+				/login = anon
+				/app/login = anon
+				<!-- pc端登出 -->
+				/logout = anon
+				<!-- pc端后台登出 -->
+				/app/logout = anon
+				<!-- pc端注册 -->
+				/register = anon
+				<!-- 客户端注册 -->
+				/m/register = anon
+				<!-- 客户端登录 -->
+				/pay/wechat/payNotify = anon 
+				/pay/alipay/payNotify = anon 
+				/m/login = anon
+				/m/logout = anon
+				/m/app/login = anon
+				/m/** mobileAuth
+				/**/*/auth/**/*.html = webAuth
+				/**/*.html = anon
+				/** = webAuth
+			</value>
+		</property>
+	</bean>
+
+	<!-- 保证实现了Shiro内部lifecycle函数的bean执行 -->
+	<bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor" />
+
+	<!-- 开启Shiro的注解(如@RequiresRoles,@RequiresPermissions),需借助SpringAOP扫描使用Shiro注解的类,并在必要时进行安全逻辑验证 -->
+	<!-- 配置以下两个bean即可实现此功能 -->
+	<!-- Enable Shiro Annotations for Spring-configured beans. Only run after 
+		the lifecycleBeanProcessor has run -->
+	<!-- 由于本例中并未使用Shiro注解,故注释掉这两个bean(个人觉得将权限通过注解的方式硬编码在程序中,查看起来不是很方便,没必要使用) -->
+	<!-- <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" 
+		depends-on="lifecycleBeanPostProcessor"/> <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor"> 
+		<property name="securityManager" ref="securityManager"/> </bean> -->
+
+</beans>
